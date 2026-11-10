@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install GNU Fortran, LAPACK and fpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gfortran liblapack-dev libblas-dev build-essential curl ca-certificates
+          sudo curl -fsSL https://github.com/fortran-lang/fpm/releases/download/v0.10.1/fpm-0.10.1-linux-x86_64 -o /usr/local/bin/fpm
+          sudo chmod +x /usr/local/bin/fpm
+      - name: Run offline Fortran unit and LAPACK DGELSD oracle tests
+        run: /bin/sh scripts/test-offline.sh
+      - name: Run offline asserting demo
+        run: /bin/sh scripts/demo-offline.sh --assert
+      - name: Run offline JSON demo
+        run: /bin/sh scripts/demo-offline.sh --assert --json
